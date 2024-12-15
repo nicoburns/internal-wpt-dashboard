@@ -65,9 +65,9 @@ export function focus_areas_map (run) {
     const map = {}
     for (const test of Object.keys(run.test_scores)) {
         map[test] = []
-        for (const [area_key, area] of Object.entries(FOCUS_AREAS)) {
+        for (const area of FOCUS_AREAS) {
             if (area.predicate(test)) {
-                map[test].push(area_key)
+                map[test].push(area.key)
             }
         }
     }
@@ -95,103 +95,102 @@ const CSS2_FOCUS_FOLDERS = [
 
 const CSS_TABLES_PREDICATE = /^\/css\/(CSS2\/tables|css-tables)\//
 
-const FOCUS_AREAS = {
-    all: {
+const FOCUS_AREAS = [
+    {
+        key: 'all',
         name: 'All WPT tests',
         predicate: prefix_predicate(''),
-        order: 0
     },
-    css: {
+    {
+        key: 'css',
         name: '/css',
         predicate: prefix_predicate('/css/'),
-        order: 1
     },
-    css2: {
+    {
+        key: 'css2',
         name: '/css/CSS2',
         predicate: prefix_predicate('/css/CSS2/'),
-        order: 2
     },
-    csstable: {
+
+    ...CSS2_FOCUS_FOLDERS.map((folder) => {
+        const path = `/css/CSS2/${folder}/`
+        return {
+            key: folder,
+            name: path,
+            predicate: prefix_predicate(path),
+        }
+    }),
+
+    {
+        key: 'csstable',
         name: '/css/CSS2/tables & /css/css-tables',
         predicate: regex_predicate(CSS_TABLES_PREDICATE),
-        order: 90
     },
-    cssom: {
+    {
+        key: 'cssom',
         name: '/css/cssom',
         predicate: prefix_predicate('/css/cssom/'),
-        order: 91
     },
-    csspos: {
+    {
+        key: 'csspos',
         name: '/css/css-position',
         predicate: prefix_predicate('/css/css-position/'),
-        order: 92
     },
-    cssflex: {
+    {
+        key: 'cssflex',
         name: '/css/css-flexbox',
         predicate: prefix_predicate('/css/css-flexbox/'),
-        order: 93
     },
-    cssgrid: {
+    {
+        key: 'cssgrid',
         name: '/css/css-grid',
         predicate: prefix_predicate('/css/css-grid/'),
-        order: 94
     },
-    cssalign: {
+    {
+        key: 'cssalign',
         name: '/css/css-align',
         predicate: prefix_predicate('/css/css-align/'),
-        order: 95
     },
-    csstext: {
+    {
+        key: 'csstext',
         name: '/css/css-text',
         predicate: prefix_predicate('/css/css-text/'),
-        order: 96
     },
-    gamepad: {
+    {
+        key: 'gamepad',
         name: '/gamepad',
         predicate: prefix_predicate('/gamepad/'),
-        order: 97
     },
-    shadowdom: {
+    {
+        key: 'shadowdom',
         name: '/shadow-dom',
         predicate: prefix_predicate('/shadow-dom/'),
-        order: 98
     },
-    webcryptoapi: {
+    {
+        key: 'webcryptoapi',
         name: '/WebCryptoAPI',
         predicate: prefix_predicate('/WebCryptoAPI/'),
-        order: 99
     },
-    webxr: {
+    {
+        key: 'webxr',
         name: '/webxr',
         predicate: prefix_predicate('/webxr/'),
-        order: 100
     }
-}
+]
 
-for (const [idx, folder] of CSS2_FOCUS_FOLDERS.entries()) {
-    const path = `/css/CSS2/${folder}/`
-    FOCUS_AREAS[folder] = {
-        name: `${path}`,
-        predicate: prefix_predicate(path),
-        order: idx + 3
-    }
+const area_keys = FOCUS_AREAS.map(area => area.key)
+const area_names = {}
+for (const area of Object.values(FOCUS_AREAS)) {
+    area_names[area.key] = area.name
 }
 
 export function get_focus_areas () {
-    const area_keys = []
-    const area_names = {}
-    for (const [key, area] of Object.entries(FOCUS_AREAS)) {
-        area_keys.push(key)
-        area_names[key] = area.name
-    }
-
-    area_keys.sort((a, b) => FOCUS_AREAS[a].order - FOCUS_AREAS[b].order)
     return { area_keys, area_names }
 }
 
 export function score_run (run, against_run, focus_areas_map) {
     const scores = {}
-    for (const area of Object.keys(FOCUS_AREAS)) {
+    for (const area of area_keys) {
         scores[area] = {
             total_tests: 0,
             total_score: 0

@@ -13,6 +13,7 @@
     },
     "rules": {
         "camelcase": "off",
+        "comma-dangle": "off",
         "indent": ["error", 4]
     }
 }
