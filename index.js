@@ -80,8 +80,10 @@ async function recalc_scores (runs_dir) {
     const test_to_areas = focus_areas_map(new_run)
     for (const [i, r] of all_runs.entries()) {
         const [date] = r.split('.')
+        const start = Date.now()
         console.log(`Reading run ${runs_dir}/${r} (${i}/${run_count})`)
         const run = await read_compressed(`./${runs_dir}/${r}`)
+        const start_score = Date.now()
         console.log(`Calculating score for run ${runs_dir}/${r} (${i}/${run_count})`)
         const score = score_run(run, new_run, test_to_areas)
         const row = {
@@ -92,6 +94,13 @@ async function recalc_scores (runs_dir) {
         }
 
         run_results.push(row)
+
+        const end = Date.now()
+        const read_time = start_score - start
+        const score_time = end - start_score
+        const total_time = end - start
+
+        console.log(`Done in ${total_time}ms (read in ${read_time}ms; scored in ${score_time}ms).`)
     }
 
     return run_results
