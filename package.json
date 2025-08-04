@@ -27,6 +27,7 @@
     "mocha": "^10.2.0"
   },
   "dependencies": {
+    "chalk": "^5.5.0",
     "lzma-native": "^8.0.6"
   }
 }
