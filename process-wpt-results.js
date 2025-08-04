@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import chalk from 'chalk';
 
 function is_object (val) {
     return (
@@ -128,7 +129,7 @@ export function get_focus_areas () {
     return FOCUS_AREAS.map(area => area.name)
 }
 
-export function score_run (run, against_run, focus_areas_map) {
+export function score_run (run, against_run, focus_areas_map, print_filter) {
     const scores = FOCUS_AREAS.map(() => ({
         total_tests: 0,
         total_score: 0,
@@ -136,7 +137,10 @@ export function score_run (run, against_run, focus_areas_map) {
         total_subtests_passed: 0
     }))
 
-    for (const [test, { subtests }] of Object.entries(against_run.test_scores)) {
+    const testNames = Object.keys(against_run.test_scores)
+    testNames.sort()
+    for (const test of testNames) {
+        const { subtests } = against_run.test_scores[test]
         const area_indices = focus_areas_map[test]
         const subtest_names = Object.keys(subtests)
 
@@ -155,6 +159,14 @@ export function score_run (run, against_run, focus_areas_map) {
                 scores[index].total_score += run_test.score
                 scores[index].total_subtests_passed += run_test.score
             }
+            if (print_filter(test)) {
+                const passes = run_test.score === 1
+                if (passes) {
+                    console.log(chalk.green(`PASS ${test}`))
+                } else {
+                    console.log(chalk.red(`FAIL ${test}`))
+                }
+            }
         } else {
             let subtests_passed = 0
             for (const subtest of subtest_names) {
@@ -162,9 +174,18 @@ export function score_run (run, against_run, focus_areas_map) {
                     subtests_passed += run_test.subtests[subtest].score
                 }
             }
+            const test_score = subtests_passed / subtest_names.length
             for (const index of area_indices) {
                 scores[index].total_score += subtests_passed / subtest_names.length
                 scores[index].total_subtests_passed += subtests_passed
+            }
+            if (print_filter(test)) {
+                const passes = test_score === 1
+                if (passes) {
+                    console.log(chalk.green(`PASS ${test} (${subtests_passed}/${subtest_names.length})`))
+                } else {
+                    console.log(chalk.red(`FAIL ${test} (${subtests_passed}/${subtest_names.length})`))
+                }
             }
         }
     }

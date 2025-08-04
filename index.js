@@ -66,11 +66,11 @@ async function add_run (runs_dir, chunks_dir, date) {
     await write_compressed(`./${runs_dir}/${date}.xz`, new_run)
 }
 
-async function score_single_run (chunks_dir) {
+async function score_single_run (chunks_dir, print_filter) {
     const run = await process_chunks(chunks_dir)
     const test_to_areas = focus_areas_map(run)
     const area_keys = get_focus_areas()
-    const score = score_run(run, run, test_to_areas)
+    const score = score_run(run, run, test_to_areas, print_filter)
     const row = [
         ['revision', run.run_info.revision.substring(0, 9)],
         ['browser version', run.run_info.browser_version]
@@ -102,7 +102,7 @@ async function recalc_scores (runs_dir) {
         const run = await read_compressed(`./${runs_dir}/${r}`)
         const start_score = Date.now()
         console.log(`Calculating score for run ${runs_dir}/${r} (${i}/${run_count})`)
-        const score = score_run(run, new_run, test_to_areas)
+        const score = score_run(run, new_run, test_to_areas, () => false)
         const row = {
             date,
             wpt_revision: run.run_info.revision.substring(0, 9),
@@ -131,7 +131,12 @@ async function main () {
 
     if (mode === '--score') {
         const input_dir = process.argv[3]
-        const result = await score_single_run(input_dir)
+
+        let filterStr = undefined
+        if (process.argv[4] === '--filter') {
+            filterStr = process.argv[5]
+        }
+        const result = await score_single_run(input_dir, filterStr ? name => name.includes(filterStr) : () => true)
         console.log(result)
         return
     }
